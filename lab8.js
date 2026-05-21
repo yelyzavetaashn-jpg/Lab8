@@ -5,3 +5,8 @@ class AuthenticationProxy {
     this.authType = null;
   }
 }
+
+setAuthentication(type, credentials) {
+  this.authType = type;
+  this.authData = credentials;
+}
