@@ -3,76 +3,118 @@ class AuthenticationProxy {
     this.baseUrl = baseUrl;
     this.authData = null;
     this.authType = null;
+
+    this.rateLimit = null;
+    this.requestCount = 0;
+  }
+
+  setAuthentication(type, credentials) {
+    this.authType = type;
+    this.authData = credentials;
+  }
+
+  setRateLimit(limit) {
+    this.rateLimit = limit;
+    this.requestCount = 0;
+  }
+
+  checkRateLimit() {
+    if (
+      this.rateLimit &&
+      this.requestCount >= this.rateLimit
+    ) {
+      throw new Error(
+        "Rate limit exceeded"
+      );
+    }
+
+    this.requestCount++;
+  }
+
+  buildHeaders() {
+    const headers = {};
+
+    switch (this.authType) {
+      case "API_KEY":
+        headers["x-api-key"] =
+          this.authData.apiKey;
+        break;
+
+      case "JWT":
+        headers["Authorization"] =
+          `Bearer ${this.authData.token}`;
+        break;
+
+      case "OAUTH":
+        headers["Authorization"] =
+          `OAuth ${this.authData.token}`;
+        break;
+
+      default:
+        break;
+    }
+
+    return headers;
+  }
+
+  async sendRequest(endpoint, options = {}) {
+    this.checkRateLimit();
+
+    const headers = {
+      ...this.buildHeaders(),
+      ...options.headers
+    };
+
+    console.log(
+      `Sending request to: ${this.baseUrl}${endpoint}`
+    );
+
+    console.log(
+      "Request headers:",
+      headers
+    );
+
+    return {
+      endpoint: `${this.baseUrl}${endpoint}`,
+      headers,
+      status: 200
+    };
   }
 }
 
-setAuthentication(type, credentials) {
-  this.authType = type;
-  this.authData = credentials;
-}
+const proxy = new AuthenticationProxy(
+  "https://api.example.com"
+);
 
-buildHeaders() {
-  const headers = {};
-
-  switch (this.authType) {
-    case "API_KEY":
-      headers["x-api-key"] =
-        this.authData.apiKey;
-      break;
-
-    case "JWT":
-      headers["Authorization"] =
-        `Bearer ${this.authData.token}`;
-      break;
-
-    case "OAUTH":
-      headers["Authorization"] =
-        `OAuth ${this.authData.token}`;
-      break;
-
-    default:
-      break;
+proxy.setAuthentication(
+  "JWT",
+  {
+    token: "example-jwt-token"
   }
+);
 
-  return headers;
-}
+proxy.setRateLimit(3);
 
-async sendRequest(endpoint, options = {}) {
+async function runExample() {
+  try {
+    console.log(
+      await proxy.sendRequest("/users")
+    );
 
-   this.checkRateLimit();
-   
-  const headers = {
-    ...this.buildHeaders(),
-    ...options.headers
-  };
+    console.log(
+      await proxy.sendRequest("/posts")
+    );
 
-  console.log(
-    `Sending request to: ${this.baseUrl}${endpoint}`
-  );
+    console.log(
+      await proxy.sendRequest("/comments")
+    );
 
-  console.log("Request headers:", headers);
-
-  return {
-    endpoint: `${this.baseUrl}${endpoint}`,
-    headers,
-    status: 200
-  };
-}
-
-setRateLimit(limit) {
-  this.rateLimit = limit;
-  this.requestCount = 0;
-}
-
-checkRateLimit() {
-  if (
-    this.rateLimit &&
-    this.requestCount >= this.rateLimit
-  ) {
-    throw new Error(
-      "Rate limit exceeded"
+  } catch (error) {
+    console.log(
+      "Request error:",
+      error.message
     );
   }
-
-  this.requestCount++;
 }
+
+runExample();
