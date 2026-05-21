@@ -60,3 +60,16 @@ setRateLimit(limit) {
   this.rateLimit = limit;
   this.requestCount = 0;
 }
+
+checkRateLimit() {
+  if (
+    this.rateLimit &&
+    this.requestCount >= this.rateLimit
+  ) {
+    throw new Error(
+      "Rate limit exceeded"
+    );
+  }
+
+  this.requestCount++;
+}
