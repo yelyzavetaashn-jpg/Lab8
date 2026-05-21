@@ -38,6 +38,9 @@ buildHeaders() {
 }
 
 async sendRequest(endpoint, options = {}) {
+
+   this.checkRateLimit();
+   
   const headers = {
     ...this.buildHeaders(),
     ...options.headers
