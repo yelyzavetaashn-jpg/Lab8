@@ -55,3 +55,8 @@ async sendRequest(endpoint, options = {}) {
     status: 200
   };
 }
+
+setRateLimit(limit) {
+  this.rateLimit = limit;
+  this.requestCount = 0;
+}
