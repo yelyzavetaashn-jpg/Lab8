@@ -36,3 +36,22 @@ buildHeaders() {
 
   return headers;
 }
+
+async sendRequest(endpoint, options = {}) {
+  const headers = {
+    ...this.buildHeaders(),
+    ...options.headers
+  };
+
+  console.log(
+    `Sending request to: ${this.baseUrl}${endpoint}`
+  );
+
+  console.log("Request headers:", headers);
+
+  return {
+    endpoint: `${this.baseUrl}${endpoint}`,
+    headers,
+    status: 200
+  };
+}
